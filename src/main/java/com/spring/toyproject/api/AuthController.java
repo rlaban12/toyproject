@@ -10,11 +10,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -29,7 +25,10 @@ public class AuthController {
      * POST : /api/auth/signup
      */
     @PostMapping("/signup")
-    public ResponseEntity<?> signup(@Valid @RequestBody SignUpRequest requestDto) {
+    public ResponseEntity<?> signup(
+            @Valid @RequestBody SignUpRequest requestDto
+    ) {
+
         log.info("회원가입 요청: {}", requestDto.getUsername());
 
         UserResponse response = userService.signup(requestDto);
@@ -46,7 +45,7 @@ public class AuthController {
      * POST /api/auth/login
      */
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody LoginRequest requestDto) {
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest requestDto) {
 
         log.info("로그인 요청: {}", requestDto.getUsernameOrEmail());
 
@@ -56,5 +55,38 @@ public class AuthController {
                 ApiResponse.success("로그인이 완료되었습니다.", response)
         );
     }
+
+    /**
+     * 사용자명 중복 체크 API
+     * GET /api/auth/check-username?username=xxx
+     */
+    @GetMapping("/check-username")
+    public ResponseEntity<?> checkUsername(@RequestParam String username) {
+
+        boolean exists = userService.checkDuplicateUsername(username);
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(
+                        exists ? "이미 사용 중인 사용자명입니다." : "사용 가능한 사용자명입니다."
+                        , exists
+                ));
+    }
+
+    /**
+     * 이메일 중복 체크 API
+     * GET /api/auth/check-email?email=xxx
+     */
+    @GetMapping("/check-email")
+    public ResponseEntity<?> checkEmail(@RequestParam String email) {
+
+        boolean exists = userService.checkDuplicateEmail(email);
+
+        return ResponseEntity.ok()
+                .body(ApiResponse.success(
+                        exists ? "이미 사용 중인 이메일입니다." : "사용 가능한 이메일입니다."
+                        , exists
+                ));
+    }
+
 
 }

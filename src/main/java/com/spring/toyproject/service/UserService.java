@@ -1,6 +1,5 @@
 package com.spring.toyproject.service;
 
-import com.spring.toyproject.config.PasswordEncoderConfig;
 import com.spring.toyproject.domain.dto.request.LoginRequest;
 import com.spring.toyproject.domain.dto.request.SignUpRequest;
 import com.spring.toyproject.domain.dto.response.AuthResponse;
@@ -44,7 +43,6 @@ public class UserService {
         if (userRepository.existsByUsername(requestDto.getUsername())) {
             throw new BusinessException(ErrorCode.DUPLICATE_USERNAME);
         }
-
         // 이메일 중복 체크
         if (userRepository.existsByEmail(requestDto.getEmail())) {
             throw new BusinessException(ErrorCode.DUPLICATE_EMAIL);
@@ -72,24 +70,25 @@ public class UserService {
      */
     public AuthResponse authenticate(LoginRequest loginRequest) {
 
-        // 사용자 조회(사용자명인지 이메일인지 아직 모름)
+        // 사용자 조회 (사용자명인지 이메일인지 아직 모름)
         String inputAccount = loginRequest.getUsernameOrEmail();
 
-        User user = userRepository.findByUsername(inputAccount).orElseGet(() -> userRepository.findByEmail(inputAccount)
-                .orElseThrow(
-                        () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
-                )
-        );
+        User user = userRepository.findByUsername(inputAccount)
+                .orElseGet(() -> userRepository.findByEmail(inputAccount)
+                        .orElseThrow(
+                                () -> new BusinessException(ErrorCode.USER_NOT_FOUND)
+                        )
+                );
 
         // 비밀번호 검증
-        // 사용자가 입력한 패스워드( 평문 )
+        // 사용자가 입력한 패스워드 ( 평문 )
         String inputPassword = loginRequest.getPassword();
 
-        // DB에 저장된 패스워드 (암호문)
+        // DB에 저장된 패스워드 ( 암호문 )
         String storedPassword = user.getPassword();
 
-        //평문을 다시 해시화해서 암호화한 후 비교
-        if(!passwordEncoder.matches( inputPassword, storedPassword ) ) {
+        // 평문을 다시 해시화해서 암호화한후 비교
+        if (!passwordEncoder.matches(inputPassword, storedPassword)) {
             throw new BusinessException(ErrorCode.INVALID_PASSWORD);
         }
 
@@ -99,7 +98,14 @@ public class UserService {
 
         // 발급 후? -> 클라이언트에게 전송
         return AuthResponse.of(token, UserResponse.from(user));
-
     }
 
+
+    public boolean checkDuplicateUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    public boolean checkDuplicateEmail(String email) {
+        return userRepository.existsByEmail(email);
+    }
 }

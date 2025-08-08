@@ -1,6 +1,8 @@
 /**
  * 우리 앱의 진입점 JS 파일
  */
+import {authService} from "./utils/auth.js";
+
 
 // 현재 페이지 확인 함수
 const getCurrentPage = () => {
@@ -19,10 +21,31 @@ const App = () => {
     const currentPage = getCurrentPage();
     // console.log(`currentPage: ${currentPage}`);
 
+    // 공통 이벤트 바인딩
+    const bindEvents = () => {
+        // 로그아웃 이벤트
+        document.addEventListener('click', e => {
+           if(e.target.closest('[data-action="logout"]')) {
+               e.preventDefault();
+               // 실제 로그아웃 처리 (localStorage에 있는 로그인 관련 데이터 삭제)
+               authService.logout();
+           }
+        });
+
+    };
+
+
     const init = async () => {
         try {
             const module = await import(`./pages/${currentPage}.js`);
             // console.log(module);
+
+
+            // heder의 인증 UI 업데이트
+            authService.updateHeaderUI();
+
+            // 앱의 공통 이벤트 바인딩
+            bindEvents();
 
             if (module) {
                 // default() 함수는 export default 내보낸 함수의 리턴값을 가져온다.
